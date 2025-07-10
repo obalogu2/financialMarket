@@ -1,2 +1,2 @@
 # financialMarket
-Computation in financial Market based on question from Options, Futures and other derivatives by John C Hull
+Computation in financial Market based on questions from Options, Futures and other derivatives by John C Hull
