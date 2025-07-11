@@ -9,15 +9,29 @@ class BondPricing:
     """
 
     @staticmethod
-    def bond_pricing_vanilla( par_value: float, year_to_maturity: float, coupon_rate: float, interest_rate: float,payment_frequency: int = 2) -> float:
+    def bond_pricing_vanilla(par_value: float, year_to_maturity: float, coupon_rate: float, yield_rate: float,
+                             payment_frequency: int = 2) -> float:
+        """
+        This is the regular vanilla bond pricing with a coupon rate and yield.
 
+        :param par_value: this is the face value of the bond and usually $1000.00
+        :param year_to_maturity:     a year to maturity of the bond
+        :param coupon_rate: The coupon rate in decimal
+        :param yield_rate:  The yield rate in decimal
+        :param payment_frequency:   an integer value for payment frequency, usually 2 for semiannual
+        :return:
+        """
+
+        # Discrete discounting factor method
         def factor( i : int ) -> float:
-            return (1/(1+interest_rate/payment_frequency))**i
+            return (1 / (1 + yield_rate / payment_frequency))**i
 
         num: float = payment_frequency * year_to_maturity
         pv_par_value: float =  par_value * factor(int(num))
         coupon_value: float = (coupon_rate * par_value)/payment_frequency
 
+        # one can use the function provided by calculus to calculate the geometric series, the calculation is accurate
+        # to dollar and cents
         if year_to_maturity <= 40:
             local_num: float = num
             value: float = 0.0
@@ -27,7 +41,7 @@ class BondPricing:
             value =coupon_value * value
             return value + pv_par_value
         else:
-            return coupon_value * (1 - (interest_rate/payment_frequency)**num)/(1-interest_rate/payment_frequency) + pv_par_value
+            return coupon_value * (1 - (yield_rate / payment_frequency) ** num)/(1 - yield_rate / payment_frequency) + pv_par_value
 
     @staticmethod
     def bond_pricing(zeros_df: pd.DataFrame, coupon: float, par_value: float, bond_yield: float = None,

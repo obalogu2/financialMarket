@@ -29,20 +29,42 @@ def apply_interest(principal: float, rate: float, period: int, is_discrete: bool
             else continuous(principal, rate, period))
 
 
-def equivalent_rate(rate: float, compounding_frequency: int, compounding: bool = False) -> float:
+class RatesUtil:
     """
-    This function convert rate to equivalent i.e if compounding is True, the function return
-    discrete interest rate otherwise it's return the continuous interest rate.
+    This class is a utility class for rates conversion.
+        1) Rates conversion between discrete compounding
+        2) Rates conversion between discrete and continuous compounding
 
-    :param rate:
-    :param compounding_frequency:
-    :param compounding:
-    :return:
+    For organization purpose only
     """
-    if compounding:
-        return compounding_frequency * (math.exp(rate / compounding_frequency) - 1)
-    else:
-        return compounding_frequency * math.log(1 + rate / compounding_frequency)
+    @staticmethod
+    def conversion_btw_discrete(rate: float, from_compounding_frequency: int, to_compounding_frequency: int,) -> float:
+        """
+        This function convert rate to equivalent from one compounding frequency to another.
+
+        :param rate:
+        :param from_compounding_frequency:
+        :param to_compounding_frequency:
+        :return:
+        """
+        _power: float = from_compounding_frequency / to_compounding_frequency
+        return to_compounding_frequency * ((1 + rate / from_compounding_frequency)**_power -1)
+
+    @staticmethod
+    def conversion_btw_discrete_continuous(rate: float, compounding_frequency: int, compounding: bool = False) -> float:
+        """
+        This function convert rate to equivalent i.e., if compounding is True, the function returns
+        discrete interest rate otherwise it's return the continuous interest rate.
+
+        :param rate:
+        :param compounding_frequency:
+        :param compounding:
+        :return:
+        """
+        if compounding:
+            return compounding_frequency * (math.exp(rate / compounding_frequency) - 1)
+        else:
+            return compounding_frequency * math.log(1 + rate / compounding_frequency)
 
 
 class CorporateActions:

@@ -7,7 +7,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from scipy.optimize import RootResults
-from functions import equivalent_rate, apply_interest, CorporateActions, ttest_2_samples
+from functions import RatesUtil, apply_interest, CorporateActions, ttest_2_samples
 from functions.assetClasses.bond import BondPricing
 from functions.assetClasses.options import ContractSpecs, OptionContract, OptionsCalculator, option_payoff, SecEnum
 
@@ -18,12 +18,12 @@ class FunctionTest(unittest.TestCase):
         m: int = 2
         interest_rate: float = 0.1
 
-        print(equivalent_rate(0.0687, 2))
-        print(equivalent_rate(0.20, 2))
-        print(equivalent_rate(0.19, 12))
+        print(RatesUtil.conversion_btw_discrete_continuous(0.0687, 2))
+        print(RatesUtil.conversion_btw_discrete_continuous(0.20, 2))
+        print(RatesUtil.conversion_btw_discrete_continuous(0.19, 12))
 
-        self.assertEqual(equivalent_rate(interest_rate, m), 0.09758032833886408)
-        self.assertEqual(equivalent_rate(0.09758032833886408, m, compounding=True), 0.10000000000000009)
+        self.assertEqual(RatesUtil.conversion_btw_discrete_continuous(interest_rate, m), 0.09758032833886408)
+        self.assertEqual(RatesUtil.conversion_btw_discrete_continuous(0.09758032833886408, m, compounding=True), 0.10000000000000009)
 
     def test_apply_interest_rate(self):
         period: int = 1
