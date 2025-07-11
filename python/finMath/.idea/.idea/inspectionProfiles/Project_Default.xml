@@ -1,0 +1,17 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="protos.models_pb2.FirsCurrency" />
+          <option value="protos.models_pb2.VatStatus" />
+          <option value="protos.models_pb2.TaxableTransaction" />
+          <option value="protos.models_pb2.QueueMessage" />
+          <option value="protos.models_pb2.*" />
+          <option value="object.start" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
