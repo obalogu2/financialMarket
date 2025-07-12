@@ -2,6 +2,8 @@ import math
 import numpy as np
 import pandas as pd
 
+from functions import forward_rate_func
+
 
 class BondPricing:
     """
@@ -161,10 +163,17 @@ class BondPricing:
         return zeros_df
 
     @staticmethod
-    def forward_rates(zero_rates_df: pd.DataFrame, time_delta: float) -> pd.DataFrame:
+    def forward_rates(zero_rates_df: pd.DataFrame) -> pd.DataFrame:
 
-        def forward_rate_func(r2: float, r1: float, t2: float, t1: float) -> float:
-            return r2 + (r2 - r1) * (t1 / (t2 - t1))
+        """
+        The function accepts a structure of zero rates and returns a structure with the forward rates.
+
+        The column names of the Zeros dataframe are: 'Maturity', 'Zero_Rate'
+
+        :param zero_rates_df: A dataframe containing zero rates. The columns of the corresponding dataframe are;
+                'Maturity', 'Zero_Rate' and 'Forward Rates'
+        :return:
+        """
 
         forward_rates_df: pd.DataFrame = pd.DataFrame(columns=['Maturity', 'Zero Rates', 'Forward Rate'])
         num_of_rows: int = zero_rates_df.shape[0] - 1

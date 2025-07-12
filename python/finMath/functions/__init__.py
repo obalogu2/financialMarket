@@ -5,6 +5,20 @@ import pandas as pd
 from functions.assetClasses.options import ContractSpecs
 
 
+def forward_rate_func(r2: float, r1: float, t2: float, t1: float) -> float:
+
+    """
+    The function returns a forward rate given a zero rates for a particular period. This function is not identical
+    to Forward Rate Agreements that include a floating rate and a fixed rate
+
+    :param r2: Further rate
+    :param r1: front rate
+    :param t2: further time
+    :param t1: front time
+    :return:
+    """
+    return r2 + (r2 - r1) * (t1 / (t2 - t1))
+
 def apply_interest(principal: float, rate: float, period: int, is_discrete: bool = True,
                    compounding_frequency: int = np.inf) -> float:
     """

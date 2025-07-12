@@ -58,7 +58,7 @@ class FunctionTest(unittest.TestCase):
 
         zeros_test_df: pd.DataFrame = pd.DataFrame({'Maturity': [1, 2, 3, 4, 5],
                                                     'Zero_Rate': [3.0, 4.0, 4.6, 5.0, 5.3]})
-        print(BondPricing.forward_rates(zeros_test_df, 0.5))
+        print(BondPricing.forward_rates(zeros_test_df))
 
     def test_corporate_actions(self):
         option_contract: ContractSpecs = CorporateActions.stock_split(100.00, 3 / 2)
