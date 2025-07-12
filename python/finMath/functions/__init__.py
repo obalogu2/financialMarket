@@ -66,6 +66,26 @@ class RatesUtil:
         else:
             return compounding_frequency * math.log(1 + rate / compounding_frequency)
 
+    @staticmethod
+    def get_percentage_return(investment: float, payout: float, period: float=1, compounding: float=1,
+                              is_continuous = False) -> float:
+
+        """
+        Given an initial investment and a payout, the function returns the percentage return.
+
+        :param investment:
+        :param payout:
+        :param period:
+        :param compounding:
+        :param is_continuous:
+        :return:
+        """
+        if is_continuous:
+            return math.log(payout / investment) * (1/period)
+        else:
+            return compounding * ((payout / investment) ** (1/(period*compounding)) - 1)
+
+
 
 class CorporateActions:
 
