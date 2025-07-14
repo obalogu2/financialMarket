@@ -46,29 +46,27 @@ class BondPricing:
             return coupon_value * (1 - (yield_rate / payment_frequency) ** num)/(1 - yield_rate / payment_frequency) + pv_par_value
 
     @staticmethod
-    def bond_pricing(zeros_df: pd.DataFrame, coupon: float, par_value: float, bond_yield: float = None,
-                     first_maturity: float = None, n: int = None, difference: float = None,
-                     seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
-        if zeros_df.shape[1] != 2:
+    def bond_pricing(zeros_df: pd.DataFrame) -> float:
+
+        """
+        Given a dataframe of zeros, it's adequate to compute the bond price.
+
+        The dataframe should have the following columns:
+                'maturities', 'zero_rates', 'payments'
+
+        Pre Condition: The Coupon payments must be prepopulated
+
+        :param zeros_df:
+        :return:
+        """
+        if zeros_df.shape[1] != 3:
             return np.inf * -1
 
-        def pricing_from_zeros(row: pd.Series, c: float = coupon) -> float:
-            return c * math.exp(-1 * row[0] * (row[1] / 100))
+        def pricing_from_zeros(row: pd.Series) -> float:
+            return row.iloc[2] * math.exp(-1 * row.iloc[0] * row.iloc[1])
 
-        if bond_yield is None:
-            values_series = zeros_df.apply(pricing_from_zeros, axis=1)
-            expiry_time: float = zeros_df.iat[zeros_df.shape[0] - 1, 0]
-            expiry_rate: float = zeros_df.iat[zeros_df.shape[0] - 1, 1]
-
-            return values_series.sum() + (par_value * math.exp(-1 * expiry_time * (expiry_rate / 100)))
-        else:
-
-            price: float = 0.0
-            temp_n: int = n
-            while n > 0:
-                price += coupon * math.exp(-1 * seq_func(first_maturity, n, difference) * (bond_yield / 100))
-                n -= 1
-            return price + par_value * math.exp(-1 * seq_func(first_maturity, temp_n, difference) * (bond_yield / 100))
+        price: pd.Series = zeros_df.apply(pricing_from_zeros, axis=1)
+        return price.sum()
 
     @staticmethod
     def h_func(bond_yield: float, coupon: float, par_value: float, first_maturity: float, n: int,

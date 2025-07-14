@@ -33,10 +33,7 @@ class FunctionTest(unittest.TestCase):
         self.assertEqual(110.51709180756477, apply_interest(principal, rate, period, False))
 
     def test_bond_pricing(self):
-        df = pd.DataFrame({'maturity': [0.5, 1.0, 1.5, 2.0], 'zero_rate': [6.76, 6.76, 6.76, 6.76]})
-        p: float = BondPricing.bond_pricing(df, 3.0, 100, bond_yield=6.76,
-                                            first_maturity=0.5, n=4, difference=0.5)
-        print(df.shape[0])
+
         # print(BondPricing.h_func(6.76, 3, 100, 0.5, 4, 0.5, p))
         # print(BondPricing.h_func_prime(6.76, 3, 100, 0.5, 4, 0.5, p))
 
