@@ -12,7 +12,7 @@ class BondPricing:
 
     @staticmethod
     def bond_pricing_vanilla(par_value: float, year_to_maturity: float, coupon_rate: float, yield_rate: float,
-                             payment_frequency: int = 2) -> float:
+                             nominal_yield:float = -1, payment_frequency: int = 2) -> float:
         """
         This is the regular vanilla bond pricing with a coupon rate and yield.
 
@@ -20,6 +20,7 @@ class BondPricing:
         :param year_to_maturity:     a year to maturity of the bond
         :param coupon_rate: The coupon rate in decimal
         :param yield_rate:  The yield rate in decimal
+        :param nominal_yield:  The nominal yield rate in decimal
         :param payment_frequency:   an integer value for payment frequency, usually 2 for semiannual
         :return:
         """
@@ -30,7 +31,7 @@ class BondPricing:
 
         num: float = payment_frequency * year_to_maturity
         pv_par_value: float =  par_value * factor(int(num))
-        coupon_value: float = (coupon_rate * par_value)/payment_frequency
+        coupon_value: float = nominal_yield if nominal_yield > 0 else (coupon_rate * par_value)/payment_frequency
 
         # one can use the function provided by calculus to calculate the geometric series, the calculation is accurate
         # to dollar and cents
