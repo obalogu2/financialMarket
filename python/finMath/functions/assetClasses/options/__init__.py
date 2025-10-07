@@ -1,19 +1,59 @@
-from enum import Enum, IntEnum
-from unittest import case
+from enum import Enum, IntEnum, StrEnum
 
 import numpy as np
 from scipy.stats import norm
 from scipy.optimize import root_scalar, RootResults
 
+class OptionPayOffResult:
+    def __init__(self, pay_off_value: float, intrinsic_value: float):
+        self.__pay_off_value__ : float = pay_off_value
+        self.__intrinsic_value__: float = intrinsic_value
 
-def option_payoff(strike: float, underlying: float, option_type: str, out_of_money: bool = False) -> float:
-    payoff_table = {'C': lambda s, k: s - k if out_of_money else max(s - k, 0),
-                    'P': lambda s, k: k - s if out_of_money else max(k - s, 0)}
+    def get_pay_off_value(self) -> float:
+        return self.__pay_off_value__
+
+    def get_intrinsic_value(self) -> float:
+        return self.__intrinsic_value__
+
+    def __str__(self):
+        return f"(PayOff,Intrinsic)=({self.__pay_off_value__},{self.__intrinsic_value__})"
+
+def option_payoff(strike: float, underlying: float, option_type: str) -> OptionPayOffResult:
+    payoff_table = {'C': lambda s, k: OptionPayOffResult(s - k, max(s - k, 0)),
+                    'P': lambda s, k: OptionPayOffResult(k - s, max(k - s, 0))}
     return payoff_table[option_type](underlying, strike)
 
+class OptionType(StrEnum):
+    CALL: str = 'C'
+    PUT: str = 'P'
+
+class OptionStyle(StrEnum):
+    AMER: str = 'A'
+    EURO: str = 'E'
+
+class OptionClass:
+    def __init__(self, underlying: str, option_type: OptionType):
+        self.__underlying__: str = underlying
+        self.__option_type__: OptionType = option_type
+        self.__strikes__: set = set()
+
+    def get_underlying(self) -> str:
+        return self.__underlying__
+
+    def get_option_type(self) -> OptionType:
+        return self.__option_type__
+
+    def add_strike(self, strike: float):
+        self.__strikes__.add(strike)
 
 class ContractSpecs:
-    def __init__(self, strike: float, option_type: str = 'C', option_style: str = 'E', delivery: int = 100,
+
+    """
+    This class is a Record Holder specifying the option contract specification.
+
+    """
+    def __init__(self, strike: float, option_type: OptionType = OptionType.CALL,
+                 option_style: OptionStyle =  OptionStyle.EURO, delivery: int = 100,
                  expiry: float = None):
         self.__option_type: str = option_type
         self.__strike: float = strike
@@ -72,7 +112,7 @@ class OptionsCalculator:
         option_strike: float = option_contract.get_contract_specs().get_strike()
         underlying_price: float = option_contract.get_underlying()
 
-        pay_off: float = option_payoff(underlying_price, option_strike, option_type, out_of_money=True)
+        pay_off: float = option_payoff(underlying_price, option_strike, option_type).get_pay_off_value()
         out_of_the_money: float = 0.00
         if pay_off < 0:
             out_of_the_money = abs(pay_off)
@@ -81,10 +121,6 @@ class OptionsCalculator:
         val2: float = option_contract.get_option_price() + 0.1 * option_contract.get_underlying()
 
         return total_quantity * max(val1, val2)
-
-    @staticmethod
-    def bull_spread(buy_option: OptionContract, sell_option: OptionContract):
-        pass
 
     @staticmethod
     def __a(underlying_type: str, expiry_factor: float):
