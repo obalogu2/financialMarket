@@ -20,7 +20,7 @@ class BondPricing:
         :param year_to_maturity:     a year to maturity of the bond
         :param coupon_rate: The coupon rate in decimal
         :param yield_rate:  The yield rate in decimal
-        :param nominal_yield:  The nominal yield rate in decimal
+        :param nominal_yield:  The nominal yield rate in decimal, the dollar value of the coupon payment
         :param payment_frequency:   an integer value for payment frequency, usually 2 for semiannual
         :return:
         """
@@ -35,11 +35,11 @@ class BondPricing:
 
         # one can use the function provided by calculus to calculate the geometric series, the calculation is accurate
         # to dollar and cents
-        if year_to_maturity <= 40:
+        if year_to_maturity <= 5:
             local_num: float = num
             value: float = 0.0
             while local_num > 0:
-                value += factor(local_num)
+                value += factor(int(local_num))
                 local_num -= 1
             value =coupon_value * value
             return value + pv_par_value
@@ -68,54 +68,6 @@ class BondPricing:
 
         price: pd.Series = zeros_df.apply(pricing_from_zeros, axis=1)
         return price.sum()
-
-    @staticmethod
-    def h_func(bond_yield: float, coupon: float, par_value: float, first_maturity: float, n: int,
-               difference: float, bond_price: float = None, seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
-
-        temp_n: int = n
-        value: float = 0.0
-
-        while n > 0:
-            value += math.exp(-1 * seq_func(first_maturity, n, difference) * (bond_yield / 100))
-            n -= 1
-        value *= coupon
-        value += par_value * math.exp(-1 * seq_func(first_maturity, temp_n, difference) * (bond_yield / 100))
-        return value - bond_price
-
-    @staticmethod
-    def h_func_prime(bond_yield: float, coupon: float, par_value: float, first_maturity: float,
-                     n: int, difference: float,
-                     bond_price: float = None, seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
-
-        temp_n: int = n
-        value: float = 0.0
-
-        while n > 0:
-            a: float = seq_func(first_maturity, n, difference)
-            value += -1 * a * math.exp(-1 * a * (bond_yield / 100))
-            n -= 1
-        value *= coupon
-        a: float = seq_func(first_maturity, temp_n, difference)
-        value += -1 * a * par_value * math.exp(-1 * a * (bond_yield / 100))
-        return value
-
-    @staticmethod
-    def h_func_2nd_prime(bond_yield: float, coupon: float, par_value: float, first_maturity: float,
-                         n: int, difference: float,
-                         bond_price: float = None, seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
-
-        temp_n: int = n
-        value: float = 0.0
-
-        while n > 0:
-            a: float = seq_func(first_maturity, n, difference)
-            value += -1 * a ** 2 * math.exp(-1 * a * (bond_yield / 100))
-            n -= 1
-        value *= coupon
-        a: float = seq_func(first_maturity, temp_n, difference)
-        value += -1 * a ** 2 * par_value * math.exp(-1 * a * (bond_yield / 100))
-        return value
 
     @staticmethod
     def zeros_by_bootstrap_method(bonds_details: pd.DataFrame, coupon_frequency: int = 2,
@@ -192,3 +144,84 @@ class BondPricing:
 
             index += 1
         return forward_rates_df
+
+    @staticmethod
+    def bond_price_derivative(par_value: float, year_to_maturity: float, coupon_rate: float, yield_rate: float,
+                             nominal_yield:float = -1, payment_frequency: int = 2) -> float:
+        """
+        This is the regular vanilla bond pricing with a coupon rate and yield.
+
+        :param par_value: this is the face value of the bond and usually $1000.00
+        :param year_to_maturity:     a year to maturity of the bond
+        :param coupon_rate: The coupon rate in decimal
+        :param yield_rate:  The yield rate in decimal
+        :param nominal_yield:  The nominal yield rate in decimal, the dollar value of the coupon payment
+        :param payment_frequency:   an integer value for payment frequency, usually 2 for semiannual
+        :return:
+        """
+
+        n: float = year_to_maturity*payment_frequency
+        pv_par_value: float =  par_value * math.exp(-1 * (yield_rate/payment_frequency) * n)
+        coupon_value: float = nominal_yield if nominal_yield > 0 else (coupon_rate * par_value)/payment_frequency
+
+        temp_n: float = n
+        value: float = 0.0
+        while temp_n > 0:
+            value += temp_n * math.exp( -1 * (yield_rate/payment_frequency) * temp_n )
+            temp_n -= 1
+
+        return  -1 * (coupon_value * value + n * pv_par_value)
+
+
+class NewtonRaphsonSupportFunctions:
+
+    @staticmethod
+    def h_func(bond_yield: float, coupon: float, par_value: float, first_maturity: float, n: int,
+               difference: float, bond_price: float = None, seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
+
+        temp_n: int = n
+        value: float = 0.0
+
+        while n > 0:
+            value += math.exp(-1 * seq_func(first_maturity, n, difference) * (bond_yield / 100))
+            n -= 1
+        value *= coupon
+        value += par_value * math.exp(-1 * seq_func(first_maturity, temp_n, difference) * (bond_yield / 100))
+        return value - bond_price
+
+
+    @staticmethod
+    def h_func_prime(bond_yield: float, coupon: float, par_value: float, first_maturity: float,
+                     n: int, difference: float,
+                     seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
+
+        temp_n: int = n
+        value: float = 0.0
+
+        while n > 0:
+            a: float = seq_func(first_maturity, n, difference)
+            value += -1 * a * math.exp(-1 * a * (bond_yield / 100))
+            n -= 1
+        value *= coupon
+        a: float = seq_func(first_maturity, temp_n, difference)
+        value += -1 * a * par_value * math.exp(-1 * a * (bond_yield / 100))
+        return value
+
+
+    @staticmethod
+    def h_func_2nd_prime(bond_yield: float, coupon: float, par_value: float, first_maturity: float,
+                         n: int, difference: float,
+                         seq_func=lambda a, n, d: a + (n - 1) * d) -> float:
+
+        temp_n: int = n
+        value: float = 0.0
+
+        while n > 0:
+            a: float = seq_func(first_maturity, n, difference)
+            value += -1 * a ** 2 * math.exp(-1 * a * (bond_yield / 100))
+            n -= 1
+        value *= coupon
+        a: float = seq_func(first_maturity, temp_n, difference)
+        value += -1 * a ** 2 * par_value * math.exp(-1 * a * (bond_yield / 100))
+        return value
+

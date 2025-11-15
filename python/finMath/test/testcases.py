@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 
 from scipy.optimize import RootResults
 from functions import RatesUtil, apply_interest, CorporateActions, ttest_2_samples
-from functions.assetClasses.bond import BondPricing
-from functions.assetClasses.options import ContractSpecs, OptionContract, OptionsCalculator, option_payoff, SecEnum
+from functions.assetClasses.bond import BondPricing as BP
+from functions.assetClasses.bond import NewtonRaphsonSupportFunctions as NRSF
+from functions.assetClasses.options import ContractSpecs, OptionContract, OptionsCalculator, option_payoff, SecEnum, \
+    OptionType
 
 
 class FunctionTest(unittest.TestCase):
@@ -34,15 +36,16 @@ class FunctionTest(unittest.TestCase):
 
     def test_bond_pricing(self):
 
+        p: float = 100
         # print(BondPricing.h_func(6.76, 3, 100, 0.5, 4, 0.5, p))
         # print(BondPricing.h_func_prime(6.76, 3, 100, 0.5, 4, 0.5, p))
 
-        val = opt.newton(func=BondPricing.h_func, x0=3.5, fprime=BondPricing.h_func_prime,
+        val = opt.newton(func=NRSF.h_func, x0=3.5, fprime=NRSF.h_func_prime,
                          args=(3, 100, 0.5, 4, 0.5, p), maxiter=5000)
         print(val)
 
-        val = opt.newton(func=BondPricing.h_func, x0=3.5, fprime=BondPricing.h_func_prime,
-                         args=(3, 100, 0.5, 4, 0.5, p), maxiter=1550, fprime2=BondPricing.h_func_2nd_prime)
+        val = opt.newton(func=NRSF.h_func, x0=3.5, fprime=NRSF.h_func_prime,
+                         args=(3, 100, 0.5, 4, 0.5, p), maxiter=1550, fprime2=NRSF.h_func_2nd_prime)
         print(val)
 
     def test_zeros_bootstrapping(self):
@@ -50,12 +53,12 @@ class FunctionTest(unittest.TestCase):
                                                'Maturity': [0.25, 0.50, 1.00, 1.50, 2.00],
                                                'Annual_coupon': [0, 0, 0, 8, 12],
                                                'Bond_price': [97.5, 94.9, 90.0, 96., 101.6]})
-        zeros_df: pd.DataFrame = BondPricing.zeros_by_bootstrap_method(bonds_df)
+        zeros_df: pd.DataFrame = BP.zeros_by_bootstrap_method(bonds_df)
         print(zeros_df)
 
         zeros_test_df: pd.DataFrame = pd.DataFrame({'Maturity': [1, 2, 3, 4, 5],
                                                     'Zero_Rate': [3.0, 4.0, 4.6, 5.0, 5.3]})
-        print(BondPricing.forward_rates(zeros_test_df))
+        print(BP.forward_rates(zeros_test_df))
 
     def test_corporate_actions(self):
         option_contract: ContractSpecs = CorporateActions.stock_split(100.00, 3 / 2)
@@ -70,8 +73,8 @@ class FunctionTest(unittest.TestCase):
         option_price: float = 3.50
         strike_price: float = 60.0
         underlying_price: float = 57.0
-        option_type: str = 'C'
-        option_specs: ContractSpecs = ContractSpecs(strike_price, option_type=option_type)
+
+        option_specs: ContractSpecs = ContractSpecs(strike_price, option_type=OptionType.CALL)
         option_contract: OptionContract = OptionContract(underlying_price, option_price, option_specs)
 
         print(OptionsCalculator.naked_option_initial_margin(option_contract, 5))
@@ -331,24 +334,24 @@ class FunctionTest(unittest.TestCase):
         print(result.root)
 
     def test_bond_pricing_vanilla(self):
-        result: float = BondPricing.bond_pricing_vanilla(1000, 10, 0.08,
+        result: float = BP.bond_pricing_vanilla(1000, 10, 0.08,
                                                          0.060)
         print(result)
 
 
     def test_bodie_page_461(self):
-        bond1_price: float = BondPricing.bond_pricing_vanilla(1000, 10, 0.06,
+        bond1_price: float = BP.bond_pricing_vanilla(1000, 10, 0.06,
                                                          0.060)
-        bond2_price: float = BondPricing.bond_pricing_vanilla(1000, 10, 0.08,
+        bond2_price: float = BP.bond_pricing_vanilla(1000, 10, 0.08,
                                                               0.060)
         print(bond1_price)
         print(bond2_price)
 
         # Concept Check 14.4
-        bond3_price: float = BondPricing.bond_pricing_vanilla(1000, 20, 0.09,
+        bond3_price: float = BP.bond_pricing_vanilla(1000, 20, 0.09,
                                                               0.080)
         def func(x: float) -> float:
-            return bond3_price - BondPricing.bond_pricing_vanilla(1050, 5, 0.09, x)
+            return bond3_price - BP.bond_pricing_vanilla(1050, 5, 0.09, x)
 
         ytm = opt.bisect(func, 0.01, 0.09, full_output= True)
         print(bond3_price)
@@ -366,11 +369,14 @@ class FunctionTest(unittest.TestCase):
         print( mar_cycle)
         print( date(year=current_year,month=jan_cycle.month+3,day=1))
 
-        list = [date(year=current_year,month=jan_cycle.month+i,day=1) for i in range(11) if i > 0 and i % 3 == 0 ]
-        list.insert(0,jan_cycle)
+        _list = [date(year=current_year,month=jan_cycle.month+i,day=1) for i in range(11) if i > 0 and i % 3 == 0 ]
+        _list.insert(0,jan_cycle)
 
-        str_list = [i.strftime("%b").upper() for i in list]
-        print(list)
+        str_list = [i.strftime("%b").upper() for i in _list]
+        print(_list)
         print(str_list)
 
 
+    def test_jimmy_jimmy(self):
+
+        print('Jimmy')
